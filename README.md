@@ -42,16 +42,6 @@ npm run start
 
 By default, it scrapes cards with IDs from 1 to 300 for each set.
 
-### Parameters
-
-You can also use the exported `scrapeCards` function:
-
-```js
-import { scrapeCards } from "./yourscript.js";
-
-scrapeCards(1, 100, "mycards.json");
-```
-
 Arguments:
 
 - `startId`: Starting numeric ID of cards to scrape
