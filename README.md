@@ -30,7 +30,6 @@ This data was used for the creation of the dataset in JSON.
 
 ```bash
 npm run install
-npm run start
 ```
 
 ## Usage
@@ -38,7 +37,7 @@ npm run start
 You can run the scraper via CLI:
 
 ```bash
-node yourscript.js
+npm run start
 ```
 
 By default, it scrapes cards with IDs from 1 to 300 for each set.
