@@ -1,10 +1,10 @@
 {
   "name": "pocket-scraper",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "scraper.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "install": "npm i",
     "start": "node scraper.js"
   },
   "keywords": [],
@@ -16,5 +16,7 @@
     "axios": "^1.8.4",
     "cheerio": "^1.0.0"
   },
-  "type": "module"
+  "files": [
+    "scraper.js"
+  ]
 }
