@@ -1,11 +1,12 @@
 {
   "name": "pocket-scraper",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "scraper.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node scraper.js"
+    "start": "node scraper.js",
+    "postinstall": "node scraper.js"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +18,7 @@
     "cheerio": "^1.0.0"
   },
   "files": [
-    "scraper.js"
+    "scraper.js",
+    "cards.json"
   ]
 }
