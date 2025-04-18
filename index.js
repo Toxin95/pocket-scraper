@@ -1,76 +1,76 @@
 import axios from "axios";
-import * as cheerio from "cheerio"; // versione ESM
-import fs from "fs/promises"; // versione Promise per import ESM
+import * as cheerio from "cheerio";
+import fs from "fs/promises";
+import {
+  PokemonType,
+  PokemonRarity,
+  CraftingCost,
+  FullArtRarities,
+  PokemonPack,
+  PokemonSet,
+} from "../dist/types/types.js";
 
 const BASE_URL = "https://pocket.limitlesstcg.com/cards/";
 
 const typeMapping = {
-  G: "Grass",
-  R: "Fire",
-  W: "Water",
-  L: "Lightning",
-  P: "Psychic",
-  F: "Fighting",
-  D: "Darkness",
-  M: "Metal",
-  Y: "Fairy",
-  C: "Colorless",
+  G: PokemonType.Grass,
+  R: PokemonType.Fire,
+  W: PokemonType.Water,
+  L: PokemonType.Lightning,
+  P: PokemonType.Psychic,
+  F: PokemonType.Fighting,
+  D: PokemonType.Darkness,
+  M: PokemonType.Metal,
+  Y: PokemonType.Fairy,
+  C: PokemonType.Colorless,
 };
 
 const rateByRarity = {
   "1-3 card": {
-    "◊": "100.000%",
-    "◊◊": "0.000%",
-    "◊◊◊": "0.000%",
-    "◊◊◊◊": "0.000%",
-    "☆": "0.000%",
-    "☆☆": "0.000%",
-    "☆☆☆": "0.000%",
-    "♛": "0.000%",
+    [PokemonRarity.Common]: "100.000%",
+    [PokemonRarity.Uncommon]: "0.000%",
+    [PokemonRarity.Rare]: "0.000%",
+    [PokemonRarity.UltraRare]: "0.000%",
+    [PokemonRarity.Star]: "0.000%",
+    [PokemonRarity.DoubleStar]: "0.000%",
+    [PokemonRarity.TripleStar]: "0.000%",
+    [PokemonRarity.CrownRare]: "0.000%",
   },
   "4 card": {
-    "◊": "0.000%",
-    "◊◊": "90.000%",
-    "◊◊◊": "5.000%",
-    "◊◊◊◊": "1.666%",
-    "☆": "2.572%",
-    "☆☆": "0.500%",
-    "☆☆☆": "0.222%",
-    "♛": "0.040%",
+    [PokemonRarity.Common]: "0.000%",
+    [PokemonRarity.Uncommon]: "90.000%",
+    [PokemonRarity.Rare]: "5.000%",
+    [PokemonRarity.UltraRare]: "1.666%",
+    [PokemonRarity.Star]: "2.572%",
+    [PokemonRarity.DoubleStar]: "0.500%",
+    [PokemonRarity.TripleStar]: "0.222%",
+    [PokemonRarity.CrownRare]: "0.040%",
   },
   "5 card": {
-    "◊": "0.000%",
-    "◊◊": "60.000%",
-    "◊◊◊": "20.000%",
-    "◊◊◊◊": "6.664%",
-    "☆": "10.288%",
-    "☆☆": "2.000%",
-    "☆☆☆": "0.888%",
-    "♛": "0.160%",
+    [PokemonRarity.Common]: "0.000%",
+    [PokemonRarity.Uncommon]: "60.000%",
+    [PokemonRarity.Rare]: "20.000%",
+    [PokemonRarity.UltraRare]: "6.664%",
+    [PokemonRarity.Star]: "10.288%",
+    [PokemonRarity.DoubleStar]: "2.000%",
+    [PokemonRarity.TripleStar]: "0.888%",
+    [PokemonRarity.CrownRare]: "0.160%",
   },
 };
 
 const craftingCost = {
-  "◊": 35,
-  "◊◊": 70,
-  "◊◊◊": 150,
-  "◊◊◊◊": 500,
-  "☆": 400,
-  "☆☆": 1250,
-  "☆☆☆": 1500,
-  "♛": 2500,
+  [PokemonRarity.Common]: CraftingCost.Common,
+  [PokemonRarity.Uncommon]: CraftingCost.Uncommon,
+  [PokemonRarity.Rare]: CraftingCost.Rare,
+  [PokemonRarity.UltraRare]: CraftingCost.UltraRare,
+  [PokemonRarity.Star]: CraftingCost.Star,
+  [PokemonRarity.DoubleStar]: CraftingCost.DoubleStar,
+  [PokemonRarity.TripleStar]: CraftingCost.TripleStar,
+  [PokemonRarity.CrownRare]: CraftingCost.CrownRare,
 };
 
-const FullArtRarities = ["☆", "☆☆", "☆☆☆", "Crown Rare"];
-const packs = [
-  "Pikachu pack",
-  "Charizard pack",
-  "Mewtwo pack",
-  "Mew pack",
-  "Dialga pack",
-  "Palkia pack",
-];
-const sets = ["A1", "P-A", "A1a", "A2", "A2a", "A2b"];
+const packs = Object.values(PokemonPack);
+const sets = Object.values(PokemonSet);
 
 function mapAttackCost(costElements) {
   const costList = [];
@@ -209,7 +209,7 @@ async function extractCardInfo($, setCode) {
     rarity,
     fullart,
     ex,
-    setCode: setCode,
+    set_code: setCode,
     set_details: setDetails,
     pack,
     alternate_versions: alternateVersions.length
@@ -261,14 +261,15 @@ export async function scrapeCards(startId, endId, outputFile = "cards.json") {
     }
   }
 
-  const allCards = [...existingCards, ...cards];
-  await fs.writeFile(outputFile, JSON.stringify(allCards, null, 2));
+  await fs.writeFile(
+    outputFile,
+    JSON.stringify([...existingCards, ...cards], null, 2)
+  );
   console.log(
     `Scraping completo! ${cards.length} carte salvate in ${outputFile}`
   );
 }
 
-// Esecuzione se chiamato direttamente da CLI
 const start = Date.now();
 console.log("Avvio scraping...");
 scrapeCards(1, 300).then(() => {

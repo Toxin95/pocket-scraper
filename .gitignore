@@ -1,3 +1,4 @@
 package-lock.json
 cards.json
 node_modules
+dist
