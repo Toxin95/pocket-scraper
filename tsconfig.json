@@ -5,10 +5,14 @@
     "target": "ESNext",
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true, // Ignora i controlli sui tipi nelle librerie
+    "skipLibCheck": true,
     "outDir": "./dist",
-    "rootDir": "./"
+    "rootDir": "./src",
+    "baseUrl": "./src",
+    "paths": {
+      "*": ["*"]
+    }
   },
-  "include": ["**/*.ts"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "tests", "jest.config.ts"]
 }

@@ -8,11 +8,12 @@ import {
   FullArtRarities,
   PokemonPack,
   PokemonSet,
-} from "../dist/types/types.js";
+  PokemonCard,
+} from "./types/types.js";
 
 const BASE_URL = "https://pocket.limitlesstcg.com/cards/";
 
-const typeMapping = {
+const typeMapping: Record<string, PokemonType> = {
   G: PokemonType.Grass,
   R: PokemonType.Fire,
   W: PokemonType.Water,
@@ -25,7 +26,7 @@ const typeMapping = {
   C: PokemonType.Colorless,
 };
 
-const rateByRarity = {
+const rateByRarity: Record<string, Record<PokemonRarity, string>> = {
   "1-3 card": {
     [PokemonRarity.Common]: "100.000%",
     [PokemonRarity.Uncommon]: "0.000%",
@@ -58,7 +59,7 @@ const rateByRarity = {
   },
 };
 
-const craftingCost = {
+const craftingCost: Record<PokemonRarity, CraftingCost> = {
   [PokemonRarity.Common]: CraftingCost.Common,
   [PokemonRarity.Uncommon]: CraftingCost.Uncommon,
   [PokemonRarity.Rare]: CraftingCost.Rare,
@@ -72,33 +73,31 @@ const craftingCost = {
 const packs = Object.values(PokemonPack);
 const sets = Object.values(PokemonSet);
 
-function mapAttackCost(costElements) {
-  const costList = [];
+function mapAttackCost(costElements: cheerio.Cheerio<any>): PokemonType[] {
+  const costList: PokemonType[] = [];
   costElements.each((_, el) => {
-    const symbol = el.children[0]?.data?.trim() || "";
+    const symbol = (el.children[0]?.data?.trim() || "") as string;
     for (const char of symbol) {
-      const type = typeMapping[char] || "Unknown";
+      const type = typeMapping[char] || PokemonType.Colorless;
       costList.push(type);
     }
   });
-  return costList.length > 0 ? costList : ["No Cost"];
+  return costList.length > 0 ? costList : [PokemonType.Colorless];
 }
 
-function getProbabilitiesByRarity(rarity) {
-  const probabilities = {};
-  for (const [row, rates] of Object.entries(rateByRarity)) {
-    if (rarity in rates) {
-      probabilities[row] = rates[rarity];
-    }
-  }
-  return probabilities;
+function getProbabilitiesByRarity(rarity: PokemonRarity): { "1-3 card": string; "4 card": string; "5 card": string; } {
+  return {
+    "1-3 card": rateByRarity["1-3 card"][rarity],
+    "4 card": rateByRarity["4 card"][rarity],
+    "5 card": rateByRarity["5 card"][rarity]
+  };
 }
 
-async function extractCardInfo($, setCode) {
+async function extractCardInfo($: cheerio.CheerioAPI, setCode: string): Promise<PokemonCard> {
   const title = $("p.card-text-title");
-  const id = title.find("a").attr("href").split("/").pop();
+  const id = title.find("a").attr("href")?.split("/").pop() || "Unknown";
   const name = title.find("a").text().trim();
-  const hp = title.text().split(" - ").pop().replace(/\D/g, "");
+  const hp = title.text().split(" - ").pop()?.replace(/\D/g, "") || "0";
 
   const type = (() => {
     const parts = title
@@ -106,8 +105,8 @@ async function extractCardInfo($, setCode) {
       .split(" - ")
       .map((p) => p.trim());
     return (
-      parts.find((part) => Object.values(typeMapping).includes(part)) ||
-      "Unknown Type"
+      parts.find((part) => Object.values(typeMapping).includes(part as PokemonType)) ||
+      PokemonType.Colorless
     );
   })();
 
@@ -116,9 +115,9 @@ async function extractCardInfo($, setCode) {
     ? cardTypeRaw.split("-").map((s) => s.trim())
     : [cardTypeRaw, "Basic"];
 
-  const image = $("div.card-image").find("img").attr("src");
+  const image = $("div.card-image").find("img").attr("src") || "";
 
-  const attacks = [];
+  const attacks: PokemonCard["attacks"] = [];
   $("div.card-text-attack").each((_, el) => {
     const $el = $(el);
     const attackInfo = $el.find("p.card-text-attack-info");
@@ -131,7 +130,7 @@ async function extractCardInfo($, setCode) {
     });
 
     const parts = attackText.split(" ");
-    const damage = parts.pop();
+    const damage = parts.pop() || "0";
     const name = parts.join(" ") || "Unknown";
 
     attacks.push({
@@ -142,7 +141,7 @@ async function extractCardInfo($, setCode) {
     });
   });
 
-  let ability = { name: "No ability", effect: "N/A" };
+  let ability: PokemonCard["ability"] = { name: "No ability", effect: "N/A" };
   if (!cardType.startsWith("Trainer")) {
     const block = $("div.card-text-ability");
     if (block.length) {
@@ -152,13 +151,6 @@ async function extractCardInfo($, setCode) {
         name: info.text().replace("Ability:", "").trim(),
         effect: effect.text().trim(),
       };
-    }
-  } else {
-    const abilityBlock = $("div.card-text-section").next(
-      "div.card-text-section"
-    );
-    if (abilityBlock.length) {
-      ability = abilityBlock.text().trim();
     }
   }
 
@@ -170,17 +162,17 @@ async function extractCardInfo($, setCode) {
   const retreat = weaknessBlock[1]?.split(": ")[1]?.trim() || "N/A";
 
   const rarityRow = $("table.card-prints-versions tr.current");
-  const rarity = rarityRow.find("td").last().text().trim() || "Unknown";
-  const fullart = FullArtRarities.includes(rarity) ? "Yes" : "No";
+  const rarity = rarityRow.find("td").last().text().trim() as PokemonRarity;
+  const fullart = rarity in FullArtRarities ? "Yes" : "No";
 
   const ex = name.includes("ex") ? "Yes" : "No";
 
   const setBlock = $("div.card-prints-current");
   const setDetails = setBlock.find("span.text-lg").text().trim() || "Unknown";
-  const packTemp = setBlock.find("span").last().text().split("·").pop().trim();
-  const pack = packs.includes(packTemp) ? packTemp : "Every pack";
+  const packTemp = setBlock.find("span").last().text().split("·").pop()?.trim() || "Every pack";
+  const pack = packs.includes(packTemp as PokemonPack) ? packTemp : "Every pack";
 
-  const alternateVersions = [];
+  const alternateVersions: PokemonCard["alternate_versions"] = [];
   $("tr").each((_, tr) => {
     const version = $(tr).find("a").text().trim().replace(/\s+/g, " ");
     const rarity = $(tr).find("td").last().text().trim();
@@ -221,23 +213,23 @@ async function extractCardInfo($, setCode) {
   };
 }
 
-export async function scrapeCards(startId, endId, outputFile = "cards.json") {
-  const existingCards = [];
-  const existingIds = new Set();
+export async function scrapeCards(startId: number, endId: number, outputFile = "cards.json") {
+  const existingCards: PokemonCard[] = [];
+  const existingIds = new Set<string>();
 
   try {
     const fileData = await fs.readFile(outputFile, "utf-8");
-    const parsed = JSON.parse(fileData);
+    const parsed = JSON.parse(fileData) as PokemonCard[];
     parsed.forEach((card) => {
       existingCards.push(card);
-      existingIds.add(`${card.setCode}-${card.id}`);
+      existingIds.add(`${card.set_code}-${card.id}`);
     });
     console.log(`Trovate ${existingCards.length} carte già salvate.`);
   } catch {
     console.log("Nessun file esistente, si parte da zero.");
   }
 
-  const cards = [];
+  const cards: PokemonCard[] = [];
   for (const setName of sets) {
     let errorCount = 0;
     for (let i = startId; i <= endId; i++) {
@@ -254,7 +246,7 @@ export async function scrapeCards(startId, endId, outputFile = "cards.json") {
         console.log(`Processed: ${setName} - ${i}`);
         cards.push(card);
         errorCount = 0;
-      } catch (err) {
+      } catch (err: any) {
         console.warn(`Errore con ${setName}/${i}: ${err.message}`);
         if (++errorCount > 4) break;
       }
