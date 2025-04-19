@@ -213,7 +213,7 @@ async function extractCardInfo($: cheerio.CheerioAPI, setCode: string): Promise<
   };
 }
 
-export async function scrapeCards(startId: number, endId: number, outputFile = "cards.json") {
+export async function scrapeCards(startId: number, endId: number, outputFile = "./dist/cards.json") {
   const existingCards: PokemonCard[] = [];
   const existingIds = new Set<string>();
 
