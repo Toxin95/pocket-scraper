@@ -1,13 +1,13 @@
 {
   "name": "pocket-scraper",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
     "build": "npm run create:cards && tsc",
     "test": "jest",
     "start": "node dist/index.js",
-    "create:cards": "mkdir -p dist && echo [] > dist/cards.json",
+    "create:cards": "node -e \"const fs = require('fs'); const path = require('path'); const dist = path.resolve('dist'); if (!fs.existsSync(dist)) fs.mkdirSync(dist); fs.writeFileSync(path.join(dist, 'cards.json'), '[]');\"",
     "postinstall": "npm run build"
   },
   "keywords": [],
