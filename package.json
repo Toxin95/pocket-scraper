@@ -1,13 +1,13 @@
 {
   "name": "pocket-scraper",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "build": "tsc && npm run create:cards",
+    "build": "npm run create:cards && tsc",
     "test": "jest",
     "start": "node dist/index.js",
-    "create:cards": "echo [] > dist/cards.json",
+    "create:cards": "mkdir -p dist && echo [] > dist/cards.json",
     "postinstall": "npm run build"
   },
   "keywords": [],
